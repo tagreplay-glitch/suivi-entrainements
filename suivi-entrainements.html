@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Entraînements">
+<meta name="theme-color" content="#0f0f14">
+<title>Mes entraînements</title>
+<style>
+  :root{
+    --bg:#0f0f14; --card:#1a1a24; --card2:#222232; --line:#2c2c3e;
+    --text:#f2f2f7; --muted:#8a8aa3; --accent:#7c5cff;
+    --yes:#22c55e; --no:#ef4444; --run:#f59e0b; --gym:#38bdf8; --off:#8b8ba7;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,sans-serif;
+    background:radial-gradient(120% 60% at 50% 0%,#241a4d 0%,var(--bg) 60%) fixed;
+    color:var(--text); min-height:100vh;
+    padding:calc(env(safe-area-inset-top) + 16px) 14px calc(env(safe-area-inset-bottom) + 40px);
+  }
+  .wrap{max-width:560px;margin:0 auto}
+  h1{font-size:26px;margin:0 0 14px;letter-spacing:-.02em;
+     background:linear-gradient(90deg,#fff,#b9a8ff);-webkit-background-clip:text;background-clip:text;color:transparent}
+
+  .tabs{display:flex;gap:6px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:4px;margin-bottom:14px}
+  .tabs button{flex:1;border:0;background:transparent;color:var(--muted);padding:10px 6px;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer}
+  .tabs button.on{background:linear-gradient(135deg,#7c5cff,#38bdf8);color:#fff}
+
+  .nav{display:flex;align-items:center;justify-content:space-between;gap:8px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:6px;margin-bottom:14px}
+  .nav button{background:var(--card2);color:var(--text);border:0;border-radius:10px;width:36px;height:36px;font-size:18px;cursor:pointer}
+  .nav .label{font-size:13px;font-weight:600;text-align:center}
+  .nav .sub{font-size:12px;color:var(--accent);background:none;border:0;cursor:pointer;padding:0}
+
+  .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px}
+  .stat{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px 10px;text-align:center}
+  .stat b{display:block;font-size:24px;letter-spacing:-.02em}
+  .stat span{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+
+  .day{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:14px;margin-bottom:12px;
+       border-left:5px solid var(--line);transition:border-color .2s, box-shadow .2s}
+  .day.ok{border-left-color:var(--yes);box-shadow:0 0 0 1px rgba(34,197,94,.12) inset}
+  .day.ko{border-left-color:var(--no);box-shadow:0 0 0 1px rgba(239,68,68,.12) inset}
+  .day.off{border-left-color:var(--off);border-style:dashed;border-left-style:solid;opacity:.92}
+  .day.today{outline:1px solid var(--accent)}
+  .day-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+  .day-head h2{font-size:17px;margin:0}
+  .day-head .date{color:var(--muted);font-size:13px;margin-left:8px}
+  .badge{font-size:11px;background:var(--accent);color:#fff;padding:3px 8px;border-radius:999px}
+  .badge.off{background:var(--off);color:#111}
+
+  .row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:10px 0}
+  .lbl{font-size:13px;color:var(--muted);white-space:nowrap}
+  .lbl b{color:var(--text)}
+  .seg{display:flex;gap:6px;background:var(--card2);padding:4px;border-radius:12px;flex-wrap:wrap;justify-content:flex-end}
+  .seg button{border:0;background:transparent;color:var(--muted);font-size:13px;padding:8px 10px;border-radius:9px;cursor:pointer;font-weight:600}
+  .seg button.on.run{background:var(--run);color:#1b1205}
+  .seg button.on.gym{background:var(--gym);color:#04151d}
+  .seg button.on.off{background:var(--off);color:#111}
+  .seg button.on.yes{background:var(--yes);color:#04180b}
+  .seg button.on.no{background:var(--no);color:#fff}
+
+  input[type=range]{flex:1;max-width:60%;accent-color:var(--accent)}
+  input[type=number]{width:90px;background:var(--card2);border:1px solid var(--line);color:var(--text);
+     border-radius:10px;padding:8px 10px;font-size:15px;text-align:center}
+  textarea{width:100%;margin-top:8px;min-height:64px;resize:vertical;background:var(--card2);color:var(--text);
+     border:1px solid var(--line);border-radius:12px;padding:10px;font:inherit;font-size:15px}
+  input:focus,textarea:focus{outline:2px solid var(--accent);outline-offset:-1px}
+
+  .footer{display:flex;gap:10px;margin-top:18px}
+  .btn{flex:1;background:var(--card);border:1px solid var(--line);color:var(--text);border-radius:14px;padding:13px;font-size:14px;font-weight:600;cursor:pointer;text-align:center}
+  .hint{font-size:12px;color:var(--muted);text-align:center;margin-top:12px;line-height:1.5}
+  #file{display:none}
+  [hidden]{display:none !important}
+
+  /* Vue année */
+  .big{background:linear-gradient(135deg,rgba(124,92,255,.25),rgba(56,189,248,.15));border:1px solid var(--line);border-radius:20px;padding:22px;text-align:center;margin-bottom:14px}
+  .big .num{font-size:64px;font-weight:800;letter-spacing:-.04em;line-height:1}
+  .big .txt{color:var(--muted);font-size:13px;margin-top:6px;text-transform:uppercase;letter-spacing:.08em}
+  .split{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+  .split .stat b{font-size:22px}
+  .chart{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px 12px 10px;margin-bottom:14px}
+  .chart h3{margin:0 0 12px;font-size:14px;color:var(--muted);font-weight:600;padding-left:4px}
+  .bars{display:flex;align-items:flex-end;gap:6px;height:150px}
+  .bar{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%}
+  .bar .fill{width:100%;border-radius:8px 8px 4px 4px;background:linear-gradient(180deg,#7c5cff,#38bdf8);min-height:3px;transition:height .3s}
+  .bar .val{font-size:11px;color:var(--text);margin-bottom:4px;font-weight:600}
+  .bar .m{font-size:11px;color:var(--muted);margin-top:6px}
+  .bar.empty .fill{background:var(--card2)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Mes entraînements</h1>
+
+  <div class="tabs">
+    <button id="tabWeek" class="on">📅 Semaine</button>
+    <button id="tabYear">🏆 Cette année</button>
+  </div>
+
+  <!-- ===== VUE SEMAINE ===== -->
+  <div id="weekView">
+    <div class="nav">
+      <button id="prev" aria-label="Semaine précédente">‹</button>
+      <div style="text-align:center">
+        <div class="label" id="label"></div>
+        <button class="sub" id="now">Cette semaine</button>
+      </div>
+      <button id="next" aria-label="Semaine suivante">›</button>
+    </div>
+
+    <div class="stats">
+      <div class="stat"><b id="sSeances">0</b><span>Séances</span></div>
+      <div class="stat"><b id="sMins">0</b><span>Minutes</span></div>
+      <div class="stat"><b id="sNote">–</b><span>Note moy.</span></div>
+    </div>
+
+    <div id="days"></div>
+
+    <div class="footer">
+      <button class="btn" id="exp">⬇︎ Sauvegarder</button>
+      <button class="btn" id="imp">⬆︎ Restaurer</button>
+    </div>
+  </div>
+
+  <!-- ===== VUE ANNÉE ===== -->
+  <div id="yearView" hidden>
+    <div class="nav">
+      <button id="yPrev" aria-label="Année précédente">‹</button>
+      <div class="label" id="yLabel" style="font-size:16px"></div>
+      <button id="yNext" aria-label="Année suivante">›</button>
+    </div>
+
+    <div class="big">
+      <div class="num" id="yTotal">0</div>
+      <div class="txt">entraînements faits cette année</div>
+    </div>
+
+    <div class="split">
+      <div class="stat"><b id="yCourse">0</b><span>🏃 Courses</span></div>
+      <div class="stat"><b id="yMuscu">0</b><span>🏋️ Muscu</span></div>
+      <div class="stat"><b id="yMins">0</b><span>Minutes</span></div>
+      <div class="stat"><b id="yNote">–</b><span>Note moy.</span></div>
+    </div>
+
+    <div class="chart">
+      <h3>Par mois</h3>
+      <div class="bars" id="bars"></div>
+    </div>
+  </div>
+
+  <input type="file" id="file" accept="application/json,.json">
+  <p class="hint" id="hint">Tout est enregistré automatiquement sur cet appareil.<br>
+  Pense à « Sauvegarder » de temps en temps : le fichier part dans Fichiers, tu peux le garder en sécurité.</p>
+</div>
+
+<script>
+const JOURS = ['Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi','Dimanche'];
+const MOIS  = ['janv.','févr.','mars','avr.','mai','juin','juil.','août','sept.','oct.','nov.','déc.'];
+const MOIS_INI = ['J','F','M','A','M','J','J','A','S','O','N','D'];
+const KEY   = 'suivi-entrainements-v1';
+
+let db = {};
+try { db = JSON.parse(localStorage.getItem(KEY) || '{}'); } catch(e){ db = {}; }
+let weekStart = mondayOf(new Date());
+let view = 'week';
+let year = new Date().getFullYear();
+
+function mondayOf(d){
+  const x = new Date(d); x.setHours(0,0,0,0);
+  x.setDate(x.getDate() - ((x.getDay() + 6) % 7));
+  return x;
+}
+function keyOf(d){
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+function emptyWeek(){
+  return Array.from({length:7}, () => ({type:null, done:null, note:null, duration:'', desc:''}));
+}
+function getWeek(){
+  const k = keyOf(weekStart);
+  if(!db[k]) db[k] = emptyWeek();
+  return db[k];
+}
+function save(){ localStorage.setItem(KEY, JSON.stringify(db)); }
+function esc(s){ return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function short(d){ return d.getDate()+' '+MOIS[d.getMonth()]; }
+// Une séance compte seulement si elle est marquée « faite » et que ce n'est pas un jour off
+function isSeance(d){ return d && d.done === true && d.type !== 'off'; }
+
+/* ---------- Vue semaine ---------- */
+function renderHeader(){
+  const end = new Date(weekStart); end.setDate(end.getDate()+6);
+  document.getElementById('label').textContent = short(weekStart)+' – '+short(end)+' '+end.getFullYear();
+}
+
+function renderStats(){
+  const w = getWeek();
+  const done = w.filter(isSeance);
+  const mins = done.reduce((s,d) => s + (+d.duration || 0), 0);
+  const notes = w.filter(d => d.note !== null && d.type !== 'off').map(d => +d.note);
+  const moy = notes.length ? (notes.reduce((a,b)=>a+b,0)/notes.length).toFixed(1).replace('.',',') : '–';
+  document.getElementById('sSeances').textContent = done.length;
+  document.getElementById('sMins').textContent = mins;
+  document.getElementById('sNote').textContent = moy;
+}
+
+function renderDays(){
+  const w = getWeek();
+  const today = keyOf(new Date());
+  document.getElementById('days').innerHTML = w.map((d,i) => {
+    const date = new Date(weekStart); date.setDate(date.getDate()+i);
+    const isToday = keyOf(date) === today;
+    const isOff = d.type === 'off';
+    const state = isOff ? 'off' : d.done === true ? 'ok' : d.done === false ? 'ko' : '';
+    const badges = [
+      isToday ? '<span class="badge">Aujourd’hui</span>' : '',
+      isOff ? '<span class="badge off">Day off</span>' : ''
+    ].join('');
+
+    const sportRows = isOff ? '' : `
+      <div class="row">
+        <span class="lbl">Séance faite ?</span>
+        <div class="seg">
+          <button class="${d.done===true?'on yes':''}" data-i="${i}" data-f="done" data-v="oui">✅ Oui</button>
+          <button class="${d.done===false?'on no':''}" data-i="${i}" data-f="done" data-v="non">❌ Non</button>
+        </div>
+      </div>
+
+      <div class="row">
+        <span class="lbl">Note <b>${d.note === null ? '–' : d.note}/10</b></span>
+        <input type="range" min="0" max="10" step="1" value="${d.note ?? 5}" data-i="${i}" data-f="note">
+      </div>
+
+      <div class="row">
+        <span class="lbl">Durée (minutes)</span>
+        <input type="number" min="0" inputmode="numeric" placeholder="0" value="${esc(d.duration)}" data-i="${i}" data-f="duration">
+      </div>`;
+
+    return `
+    <section class="day ${state} ${isToday ? 'today' : ''}" data-i="${i}">
+      <div class="day-head">
+        <div><h2>${JOURS[i]}<span class="date">${short(date)}</span></h2></div>
+        <div>${badges}</div>
+      </div>
+
+      <div class="row">
+        <span class="lbl">Activité</span>
+        <div class="seg">
+          <button class="${d.type==='course'?'on run':''}" data-i="${i}" data-f="type" data-v="course">🏃 Course</button>
+          <button class="${d.type==='muscu'?'on gym':''}" data-i="${i}" data-f="type" data-v="muscu">🏋️ Muscu</button>
+          <button class="${isOff?'on off':''}" data-i="${i}" data-f="type" data-v="off">😴 Day off</button>
+        </div>
+      </div>
+
+      ${sportRows}
+
+      <textarea placeholder="${isOff ? 'Repos : comment tu t’es reposé ?' : 'Description de la séance (exercices, distance, ressenti…)'}" data-i="${i}" data-f="desc">${esc(d.desc)}</textarea>
+    </section>`;
+  }).join('');
+}
+
+/* ---------- Vue année ---------- */
+function yearStats(y){
+  const months = Array(12).fill(0);
+  let total = 0, course = 0, muscu = 0, mins = 0;
+  const notes = [];
+  for(const k of Object.keys(db)){
+    const [ky, km, kd] = k.split('-').map(Number);
+    const start = new Date(ky, km-1, kd);
+    const week = db[k];
+    if(!Array.isArray(week)) continue;
+    for(let i = 0; i < 7; i++){
+      const d = new Date(start); d.setDate(d.getDate()+i);
+      if(d.getFullYear() !== y) continue;
+      const day = week[i];
+      if(!day) continue;
+      if(day.type !== 'off' && day.note !== null && day.note !== undefined) notes.push(+day.note);
+      if(isSeance(day)){
+        total++;
+        months[d.getMonth()]++;
+        if(day.type === 'course') course++;
+        if(day.type === 'muscu') muscu++;
+        mins += (+day.duration || 0);
+      }
+    }
+  }
+  const moy = notes.length ? (notes.reduce((a,b)=>a+b,0)/notes.length).toFixed(1).replace('.',',') : '–';
+  return {months, total, course, muscu, mins, moy};
+}
+
+function renderYear(){
+  const s = yearStats(year);
+  document.getElementById('yLabel').textContent = year;
+  document.getElementById('yTotal').textContent = s.total;
+  document.getElementById('yCourse').textContent = s.course;
+  document.getElementById('yMuscu').textContent = s.muscu;
+  document.getElementById('yMins').textContent = s.mins;
+  document.getElementById('yNote').textContent = s.moy;
+
+  const max = Math.max(1, ...s.months);
+  document.getElementById('bars').innerHTML = s.months.map((n,m) => `
+    <div class="bar ${n===0?'empty':''}">
+      <span class="val">${n || ''}</span>
+      <div class="fill" style="height:${(n/max)*100}%"></div>
+      <span class="m">${MOIS_INI[m]}</span>
+    </div>`).join('');
+}
+
+/* ---------- Affichage général ---------- */
+function render(){
+  document.getElementById('weekView').hidden = view !== 'week';
+  document.getElementById('yearView').hidden = view !== 'year';
+  document.getElementById('tabWeek').classList.toggle('on', view === 'week');
+  document.getElementById('tabYear').classList.toggle('on', view === 'year');
+  if(view === 'week'){ renderHeader(); renderDays(); renderStats(); }
+  else { renderYear(); }
+}
+
+// Onglets
+document.getElementById('tabWeek').onclick = () => { view = 'week'; render(); };
+document.getElementById('tabYear').onclick = () => { view = 'year'; render(); };
+
+// Clics : boutons de choix
+document.getElementById('days').addEventListener('click', e => {
+  const b = e.target.closest('button[data-f]');
+  if(!b) return;
+  const i = +b.dataset.i, f = b.dataset.f, v = b.dataset.v;
+  const d = getWeek()[i];
+  if(f === 'type'){
+    d.type = (d.type === v ? null : v);
+    // Un jour off n'a pas de séance : on retire le oui/non
+    if(d.type === 'off') d.done = null;
+  }
+  if(f === 'done') d.done = (v === 'oui' ? (d.done === true ? null : true) : (d.done === false ? null : false));
+  save(); render();
+});
+
+// Saisie : curseurs, durée, description
+document.getElementById('days').addEventListener('input', e => {
+  const el = e.target;
+  if(!el.dataset.f) return;
+  const i = +el.dataset.i, f = el.dataset.f;
+  const d = getWeek()[i];
+  if(f === 'note'){
+    d.note = +el.value;
+    el.closest('.day').querySelector('.lbl b').textContent = d.note + '/10';
+  }
+  if(f === 'duration') d.duration = el.value;
+  if(f === 'desc') d.desc = el.value;
+  save(); renderStats();
+});
+
+// Navigation semaines
+document.getElementById('prev').onclick = () => { weekStart.setDate(weekStart.getDate()-7); render(); };
+document.getElementById('next').onclick = () => { weekStart.setDate(weekStart.getDate()+7); render(); };
+document.getElementById('now').onclick  = () => { weekStart = mondayOf(new Date()); render(); };
+
+// Navigation années
+document.getElementById('yPrev').onclick = () => { year--; render(); };
+document.getElementById('yNext').onclick = () => { year++; render(); };
+
+// Sauvegarde
+document.getElementById('exp').onclick = () => {
+  const blob = new Blob([JSON.stringify(db, null, 2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'entrainements-' + keyOf(new Date()) + '.json';
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+};
+
+// Restauration
+document.getElementById('imp').onclick = () => document.getElementById('file').click();
+document.getElementById('file').onchange = e => {
+  const f = e.target.files[0]; if(!f) return;
+  const r = new FileReader();
+  r.onload = () => {
+    try{
+      const data = JSON.parse(r.result);
+      if(typeof data !== 'object' || Array.isArray(data)) throw new Error();
+      db = {...db, ...data}; save(); render();
+      alert('Sauvegarde restaurée ✅');
+    }catch(err){ alert('Fichier invalide ❌'); }
+  };
+  r.readAsText(f);
+  e.target.value = '';
+};
+
+render();
+</script>
+</body>
+</html>
